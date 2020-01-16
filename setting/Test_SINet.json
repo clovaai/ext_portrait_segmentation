@@ -1,0 +1,37 @@
+{
+    "test_config": {
+        "weight_name": "./result/SINet/SINet.pth",
+        "Model": "Dnc_SINet",
+        "learning_rate": 5e-4,
+        "num_classes" : 2,
+        "p" : 2,
+        "q" : 8,
+        "chnn" : 1,
+        "epochs": 3,
+        "dnc_batch" : 24,
+        "loss" : "CE",
+
+        "save_dir": "./result",
+        "optim" : "Adam",
+        "lrsch" : "step",
+        "wd_tfmode" : true,
+        "weight_decay" : 2e-4
+
+    },
+    "data_config": {
+        "cash" : "./pickle_file/NSML_portraitAug.p",
+        "dataset_name": "CVportrait",
+        "data_dir": "../../Link512DATA/",
+        "classes" : 2,
+        "ignore_idx" : 255,
+        "num_work" : 4,
+
+        "Enc" :false,
+        "w" :224,
+        "h" :224,
+        "scaleIn" : 1,
+        "batch_size": 36,
+        "Edge" :true,
+        "Aug_dataset" : true
+    }
+}

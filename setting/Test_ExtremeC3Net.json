@@ -1,0 +1,37 @@
+{
+    "test_config": {
+        "weight_name": "./result/ExtremeC3/ExtremeC3.pth",
+        "Model": "Stage2_ExtremeC3Net",
+        "learning_rate": 10e-4,
+        "num_classes" : 2,
+        "p" : 1,
+        "q" : 5,
+        "stage1_W": "",
+        "epochs": 3,
+        "dnc_batch" : 40,
+        "loss" : "Lovasz",
+
+        "save_dir": "./result",
+        "optim" : "Adam",
+        "lrsch" : "step",
+        "wd_tfmode" : true,
+        "weight_decay" : 2e-4
+
+    },
+    "data_config": {
+        "cash" : "./pickle_file/NSML_portraitAug.p",
+        "dataset_name": "CVportrait",
+        "data_dir": "../../Link512DATA/",
+        "classes" : 2,
+        "ignore_idx" : 255,
+        "num_work" : 4,
+
+        "Enc" :true,
+        "w" :224,
+        "h" :224,
+        "scaleIn" : 1,
+        "batch_size": 60,
+        "Edge" :false,
+        "Aug_dataset" : false
+    }
+}
