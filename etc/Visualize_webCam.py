@@ -73,38 +73,23 @@ def relabel(img):
 
 def evaluateModelCV(model, savedir, saveloc, mean, std, imgW, imgH, videoName, Lovasz):
     # gloabl mean and std values
-
-
-    syn_bg = cv2.imread(os.path.join(savedir,'syn_bg.jpg'))
-
-    videoOut = os.path.join(saveloc,videoName)
-    VideoIn = os.path.join(savedir,videoName)
-
+    syn_bg = cv2.imread(os.path.join(savedir, 'syn_bg.jpg'))
+    videoOut = os.path.join(saveloc, videoName)
     print("video is saved in " + videoOut)
-    video = cv2.VideoWriter(videoOut, cv2.VideoWriter_fourcc(*'mp4v'), 30, (imgW, imgH))
 
-    success= True
-    vidcap = cv2.VideoCapture(VideoIn)
+    cap = cv2.VideoCapture(0)
+
+    # Check if the webcam is opened correctly
+    success = True
+    if not cap.isOpened():
+        raise IOError("Cannot open webcam")
+        success = False
+
     while (success):
-        success, img = vidcap.read()
+        success, img = cap.read()
         if not success or img is None:
             vidcap.release()
             break
-        (h, w) = img.shape[:2]
-        center = (w //2, h // 2)
-        M = cv2.getRotationMatrix2D(center, 270,1.0)
-        cos = np.abs(M[0, 0])
-        sin = np.abs(M[0, 1])
-
-        # compute the new bounding dimensions of the image
-        nW = int((h * sin) + (w * cos))
-        nH = int((h * cos) + (w * sin))
-
-        # adjust the rotation matrix to take into account translation
-        M[0, 2] += (nW / 2) - w //2
-        M[1, 2] += (nH / 2) -  h // 2
-        img = cv2.warpAffine(img, M, (nW, nH))
-
 
         img_orig = np.copy(img)
         # PILImage.fromarray(img_orig).show()
@@ -149,44 +134,39 @@ def evaluateModelCV(model, savedir, saveloc, mean, std, imgW, imgH, videoName, L
         seg_img[:, :, 1] = img_orig[:, :, 1] * idx_fg + syn_bg[:, :, 1] * (1 - idx_fg)
         seg_img[:, :, 2] = img_orig[:, :, 2] * idx_fg + syn_bg[:, :, 2] * (1 - idx_fg)
         seg_img = cv2.resize(seg_img,(imgW, imgH))
-        video.write(seg_img)
+        cv2.imshow('input', img_orig)
 
-    video.release()
-    # cv2.destroyAllWindows()
+        cv2.imshow('frame', seg_img)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
 
 def evaluateModelPIL(model, savedir, saveloc, mean, std, imgW, imgH, videoName, Lovasz):
     # gloabl mean and std values
 
 
     syn_bg = cv2.imread(os.path.join(savedir,'syn_bg.jpg'))
-
     videoOut = os.path.join(saveloc,videoName)
-    VideoIn = os.path.join(savedir,videoName)
-
     print("video is saved in " + videoOut)
-    video = cv2.VideoWriter(videoOut, cv2.VideoWriter_fourcc(*'mp4v'), 30, (imgW, imgH))
 
-    success= True
-    vidcap = cv2.VideoCapture(VideoIn)
+    video = cv2.VideoWriter(videoOut, cv2.VideoWriter_fourcc(*'mp4v'), 30, (imgW, imgH))
+    cap = cv2.VideoCapture(0)
+
+    # Check if the webcam is opened correctly
+    success = True
+    if not cap.isOpened():
+        raise IOError("Cannot open webcam")
+        success =False
+
     while (success):
-        success, img = vidcap.read()
+        success, img= cap.read()
+
         if not success or img is None:
             vidcap.release()
             break
-        (h, w) = img.shape[:2]
-        center = (w //2, h // 2)
-        M = cv2.getRotationMatrix2D(center, 270,1.0)
-        cos = np.abs(M[0, 0])
-        sin = np.abs(M[0, 1])
 
-        # compute the new bounding dimensions of the image
-        nW = int((h * sin) + (w * cos))
-        nH = int((h * cos) + (w * sin))
-
-        # adjust the rotation matrix to take into account translation
-        M[0, 2] += (nW / 2) - w //2
-        M[1, 2] += (nH / 2) -  h // 2
-        img = cv2.warpAffine(img, M, (nW, nH))
         img_orig = np.copy(img)
         # PILImage.fromarray(img_orig).show()
 
@@ -223,13 +203,16 @@ def evaluateModelPIL(model, savedir, saveloc, mean, std, imgW, imgH, videoName, 
         seg_img[:, :, 1] = img_orig[:, :, 1] * idx_fg + syn_bg[:, :, 1] * (1 - idx_fg)
         seg_img[:, :, 2] = img_orig[:, :, 2] * idx_fg + syn_bg[:, :, 2] * (1 - idx_fg)
         seg_img = cv2.resize(seg_img,(imgW, imgH))
+        cv2.imshow('input', img_orig)
+        cv2.imshow('frame', seg_img)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-        video.write(seg_img)
-
-    video.release()
+    cap.release()
+    cv2.destroyAllWindows()
     # cv2.destroyAllWindows()
 
-def ExportVideo(model, Maxfile, savedir, model_name,  videoName,h,w , mean, std, Lovasz, pil=True):
+def DemoWebcam(model, Maxfile, savedir, model_name,  videoName,h,w , mean, std, Lovasz, pil=True):
     # read all the images in the folder
 
     if torch.cuda.is_available():
