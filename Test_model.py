@@ -5,7 +5,7 @@ MIT license
 '''
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+# os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 
 import time
 import json
@@ -23,6 +23,7 @@ import models
 from etc.help_function import *
 from etc.utils import *
 from etc.Visualize_video import ExportVideo
+from etc.Visualize_webCam import DemoWebcam
 from etc.flops_counter import add_flops_counting_methods, flops_to_string, get_model_parameters_number
 
 if __name__ == '__main__':
@@ -34,7 +35,9 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--lrsch', type=str, default="multistep", help='step, poly, multistep, warmpoly')
     parser.add_argument('-t', '--wd_tfmode', type=bool, default=True, help='Play with NSML!')
     parser.add_argument('-w', '--weight_decay', type=float, default=2e-4, help='value for weight decay')
-    parser.add_argument('-v', '--visualize', type=bool, default=False, help='visualize result image')
+    parser.add_argument('-v', '--visualize', type=bool, default=True, help='visualize result image')
+    parser.add_argument('--demoWebcam', type=bool, default=True, help='visualize result image')
+    parser.add_argument('--demoVideo', type=str, default="video1.mp4", help='visualize result image')
 
     args = parser.parse_args()
     others= args.weight_decay*0.05
@@ -120,7 +123,7 @@ if __name__ == '__main__':
         logger, this_savedir = info_setting(test_config['save_dir'], test_config["Model"], total_paramters, N_flop)
         logger.flush()
         logdir = this_savedir.split(test_config['save_dir'])[1]
-        nsml_logger = Logger(8097, './logs/' + logdir, args.use_nsml)
+        my_logger = Logger(8097, './logs/' + logdir, args.use_nsml)
 
         trainLoader,  valLoader, data = get_dataloader(data_config)
 
@@ -154,11 +157,23 @@ if __name__ == '__main__':
         if args.visualize:
             lossVal, ElossVal, mIOU_val, save_input, save_est, save_gt = \
                 val_edge(num_gpu, valLoader, model, criteria, Lovasz, args.visualize)
+            if test_config["loss"] == "Lovasz":
+                grid_outputs = torchvision.utils.make_grid(color_transform((save_est[0] > 0).cpu().data), nrow=6)
+            else:
+                grid_outputs = torchvision.utils.make_grid(
+                    color_transform(save_est[0].unsqueeze(0).cpu().max(1)[1].data), nrow=6)
+            my_logger.image_summary(torchvision.utils.make_grid(save_input[0], normalize=True),
+                                    opts=dict(title=f'VAL img (epoch: {0})', caption=f'VAL img (epoch: {0})'))
+
+            my_logger.image_summary(grid_outputs,
+                                    opts=dict(title=f'VAL output (epoch: {0}, step: {str(mIOU_val)})',
+                                              caption=f'VAL output (epoch: {0}, step: {str(mIOU_val)})', ))
+
         else:
             lossVal, ElossVal, mIOU_val = val_edge(num_gpu, valLoader, model, criteria, Lovasz)
 
         print("mIOU(val) = %.4f" %mIOU_val)
-    print("========== TRAINING FINISHED ===========")
+    print("========== TEST FINISHED ===========")
     mean = data['mean']
     std = data['std']
     print(mean)
@@ -167,10 +182,17 @@ if __name__ == '__main__':
         isPILlodear=True
     else:
         isPILlodear=False
-    # ExportVideo(model, Max_name, "./video", logdir, "video2.mp4", data_config["h"], data_config["w"], mean, std, Lovasz,
-    #         pil=isPILlodear)
-    # ExportVideo(model, Max_name, "./video", logdir, "video1.mp4", data_config["h"], data_config["w"], mean, std, Lovasz,
-    #             pil=isPILlodear)
+
+    if args.demoWebcam:
+        DemoWebcam(model, Max_name, "./video", logdir, "videoCam.mp4", data_config["h"], data_config["w"], mean, std, Lovasz,
+                    pil=isPILlodear)
+
+    if args.demoVideo !="":
+        ExportVideo(model, Max_name, "./video", logdir, args.demoVideo, data_config["h"], data_config["w"], mean, std, Lovasz,
+                pil=isPILlodear)
+
+
+
 
 
 
