@@ -36,8 +36,8 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--wd_tfmode', type=bool, default=True, help='Play with NSML!')
     parser.add_argument('-w', '--weight_decay', type=float, default=2e-4, help='value for weight decay')
     parser.add_argument('-v', '--visualize', type=bool, default=True, help='visualize result image')
-    parser.add_argument('--demoWebcam', type=bool, default=True, help='visualize result image')
-    parser.add_argument('--demoVideo', type=str, default="video1.mp4", help='visualize result image')
+    parser.add_argument('--demoWebcam', type=bool, default=True, help='Make result from webcam')
+    parser.add_argument('--demoVideo', type=str, default="", help='Make result by video')
 
     args = parser.parse_args()
     others= args.weight_decay*0.05
